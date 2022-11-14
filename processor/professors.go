@@ -30,14 +30,14 @@ func (ps Processors) Process(pchan chan *model.Patent) {
 	chans := fanout(pchan, len(ps), patentChanSize)
 	stopChan := make(chan struct{})
 	for i, p := range ps {
-		processOneFile(p, chans[i], stopChan)
+		processOneField(p, chans[i], stopChan)
 	}
 	for i := 0; i < 3*len(ps); i++ {
 		<-stopChan
 	}
 }
 
-func processOneFile(p Processor, pchan chan *model.Patent, stopChan chan struct{}) {
+func processOneField(p Processor, pchan chan *model.Patent, stopChan chan struct{}) {
 	mchan := make(chan *message, vectorChanSize)
 	go genVec(p, pchan, mchan, stopChan)
 	mchans := fanout(mchan, 2, vectorChanSize)

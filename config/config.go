@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -20,10 +22,11 @@ func init() {
 
 var conf *config
 
+func Init() {
+	conf = readConfig()
+}
+
 func Get() *config {
-	if conf == nil {
-		conf = readConfig()
-	}
 	return conf
 }
 
@@ -43,6 +46,8 @@ func readConfig() *config {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(c.Str2VecConfigs)
 
 	return c
 }

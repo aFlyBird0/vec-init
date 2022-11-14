@@ -12,11 +12,12 @@ type DBList struct {
 
 var db *DBList
 
+func Init() {
+	db = new(DBList)
+	db.Mysql = initMysql()
+	db.Redis = initRedis()
+}
+
 func Get() *DBList {
-	if db == nil {
-		db = new(DBList)
-		db.Mysql = initMysql()
-		db.Redis = initRedis()
-	}
 	return db
 }

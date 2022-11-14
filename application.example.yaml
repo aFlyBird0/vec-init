@@ -22,7 +22,7 @@ pool:
   vectorPool: 10000
 
 
-vec2str:
+str2vec:
   - field: "name"
     url: ""
   - field: "abstract"

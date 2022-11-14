@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"vec/db"
 	"vec/model"
 )
 
@@ -26,7 +25,8 @@ func (p strToVecMock) SaveVec(vec vector) error {
 }
 
 func (p strToVecMock) SaveVecIDAndPatentID(patent *model.Patent, vecID int) error {
-	return model.SetRedis(db.Get().Redis, p.addPrefixToVecID(vecID), patent.ID)
+	//return model.SetRedis(db.Get().Redis, p.addPrefixToVecID(vecID), patent.ID)
+	return nil
 }
 
 func (p strToVecMock) addPrefixToVecID(vecID int) string {
