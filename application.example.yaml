@@ -1,0 +1,32 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+
+mysql:
+  host:
+  port: 3306
+  user: root
+  password:
+  database:
+  table: patent
+
+redis:
+  host:
+  port: 6379
+  password:
+  database: 0
+
+pool:
+  pageSize: 1000
+  patentPool: 10000
+  vectorPool: 10000
+
+
+vec2str:
+  - field: "name"
+    url: ""
+  - field: "abstract"
+    url: ""
+  - field: "claim"
+    url: ""
+

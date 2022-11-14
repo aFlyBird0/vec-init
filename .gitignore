@@ -1,0 +1,4 @@
+*.vec
+.idea/
+.DS_Store
+application.yaml
