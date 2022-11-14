@@ -16,10 +16,11 @@ redis:
   password:
   database: 0
 
-pool:
+concurrency:
   pageSize: 1000
-  patentPool: 10000
-  vectorPool: 10000
+  patentPoolSize: 10000
+  vectorPoolSize: 10000
+  queryWorkerSize: 20
 
 
 str2vec:

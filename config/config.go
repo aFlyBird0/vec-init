@@ -46,6 +46,10 @@ func readConfig() *config {
 	if err != nil {
 		panic(err)
 	}
+	err = viper.UnmarshalKey("concurrency", &c.ConcurrencyConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println(c.Str2VecConfigs)
 

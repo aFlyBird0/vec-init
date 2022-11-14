@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"vec/config"
 	"vec/model"
 )
 
@@ -15,11 +16,6 @@ func (ps Processors) Add(processor Processor) Processors {
 	return ps
 }
 
-const (
-	vectorChanSize = 10000
-	patentChanSize = 5000
-)
-
 type message struct {
 	vector
 	vectorID int
@@ -27,7 +23,7 @@ type message struct {
 }
 
 func (ps Processors) Process(pchan chan *model.Patent) {
-	chans := fanout(pchan, len(ps), patentChanSize)
+	chans := fanout(pchan, len(ps), config.Get().ConcurrencyConfig.PatentPoolSize)
 	stopChan := make(chan struct{})
 	for i, p := range ps {
 		processOneField(p, chans[i], stopChan)
@@ -38,6 +34,7 @@ func (ps Processors) Process(pchan chan *model.Patent) {
 }
 
 func processOneField(p Processor, pchan chan *model.Patent, stopChan chan struct{}) {
+	vectorChanSize := config.Get().ConcurrencyConfig.VectorPoolSize
 	mchan := make(chan *message, vectorChanSize)
 	go genVec(p, pchan, mchan, stopChan)
 	mchans := fanout(mchan, 2, vectorChanSize)

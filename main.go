@@ -17,7 +17,7 @@ func main() {
 	fmt.Println("数据库初始化成功")
 	fmt.Println(database)
 
-	const patentChanSize = 500
+	patentChanSize := config.Get().ConcurrencyConfig.PatentPoolSize
 	patents := make(chan *model.Patent, patentChanSize)
 
 	stop := make(chan struct{})

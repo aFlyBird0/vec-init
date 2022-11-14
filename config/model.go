@@ -4,6 +4,7 @@ type config struct {
 	*MysqlConfig
 	*RedisConfig
 	Str2VecConfigs []*Str2VecConfig
+	*ConcurrencyConfig
 }
 
 type MysqlConfig struct {
@@ -25,4 +26,11 @@ type RedisConfig struct {
 type Str2VecConfig struct {
 	Field string
 	Url   string
+}
+
+type ConcurrencyConfig struct {
+	PageSize        int
+	PatentPoolSize  int
+	VectorPoolSize  int
+	QueryWorkerSize int
 }

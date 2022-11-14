@@ -44,9 +44,9 @@ func CountPatent() (int, error) {
 func GetPatentList(pchan chan *Patent, stop chan<- struct{}) error {
 	// get patents from database by page
 
-	const (
-		pageSize       = 100
-		queryWorkerNum = 20
+	var (
+		pageSize       = config.Get().ConcurrencyConfig.PageSize
+		queryWorkerNum = config.Get().ConcurrencyConfig.QueryWorkerSize
 	)
 
 	pageChan := make(chan int, queryWorkerNum*2)            // 页数通道
