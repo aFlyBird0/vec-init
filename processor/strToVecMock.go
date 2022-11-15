@@ -15,12 +15,14 @@ type strToVecMock struct {
 }
 
 // ToVec 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
-func (p strToVecMock) ToVec(patent *model.Patent) vector {
-	return vector(fmt.Sprintf("%s-%s-%s-%s-vector", p.reqUrl, patent.ID, p.field, patent.GetField(p.field)))
+func (p strToVecMock) ToVec(patent *model.Patent) *vector {
+	return &vector{
+		description: fmt.Sprintf("%s-%s-%s-%s-vector", p.reqUrl, patent.ID, p.field, patent.GetField(p.field)),
+	}
 }
 
-func (p strToVecMock) SaveVec(vec vector) error {
-	_, err := p.vecWriter.Write([]byte(vec.string() + "\n"))
+func (p strToVecMock) SaveVec(vec *vector) error {
+	_, err := p.vecWriter.Write([]byte(vec.description + "\n"))
 	return err
 }
 

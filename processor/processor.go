@@ -9,7 +9,7 @@ import (
 //}
 
 type Processor interface {
-	ToVec(p *model.Patent) vector
-	SaveVec(vec vector) error
+	ToVec(p *model.Patent) *vector
+	SaveVec(vec *vector) error
 	SaveVecIDAndPatentID(p *model.Patent, vecID int) error
 }

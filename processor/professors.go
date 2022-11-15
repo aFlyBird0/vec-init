@@ -17,7 +17,7 @@ func (ps Processors) Add(processor Processor) Processors {
 }
 
 type message struct {
-	vector
+	*vector
 	vectorID int
 	*model.Patent
 }

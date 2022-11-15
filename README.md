@@ -8,11 +8,62 @@
 
 * [x] 天然支持多字段向量化，只需改动配置文件即可
 * [x] 将数据库查询 -> 向量化 -> 向量存储 -> redis 更新全部并行化
-* [x] channel （缓冲池）
+* [x] channel 通信，全流程异步
 * [ ] Dockerfile
-* [ ] 数据库并发查询与自动调速
+* [x] 数据库并发查询与自动调速
 * [ ] 支持任意DDL数据库
 * [ ] 支持 PostgreSQL, Oracle
+
+## prerequisites
+
+### 1. 环境
+
+* Go 1.19+
+* Redis
+
+### 2. 数据
+
+* Mysql 并建立好数据库，导入好数据
+
+### 3. 模型服务接口
+
+需要自己准备一个模型服务接口，接口的输入是n个字符串，输出是n个m维向量，向量的维度任意。模型服务需满足（主要是key）：
+
+POST 请求，URL 定义在 application.yaml 中，Request Body：
+
+```json
+{
+    "strarr": [
+        "string1",
+        "string2",
+        "string3"
+    ]
+}
+```
+
+Response Body：
+
+```json
+{
+    "data": [
+        [
+            0.1,
+            0.2,
+            0.3
+        ],
+        [
+            0.4,
+            0.5,
+            0.6
+        ],
+        [
+            0.7,
+            0.8,
+            0.9
+        ]
+    ]
+}
+```
 
 ## run
 
