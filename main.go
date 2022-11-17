@@ -37,7 +37,7 @@ func main() {
 	fmt.Println("开始生成处理器")
 	processors := processor.NewProcessors()
 	for _, c := range config.Get().Str2VecConfigs {
-		processors = processors.Add(processor.NewStrToVecMock(c.Field, c.Url))
+		processors = processors.Add(processor.NewStrToVec(c.Field, c.Url))
 	}
 
 	// 专利处理（向量化、fvecs存储、对应关系存储）

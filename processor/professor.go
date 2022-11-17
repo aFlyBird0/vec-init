@@ -3,9 +3,18 @@ package processor
 import (
 	"vec/config"
 	"vec/model"
+	"vec/model/vector"
 )
 
-type Processors []Processor
+type (
+	Processor interface {
+		ToVec(p *model.Patent) *vector.Vector
+		SaveVec(vec *vector.Vector) error
+		SaveVecIDAndPatentID(p *model.Patent, vecID int) error
+	}
+
+	Processors []Processor
+)
 
 func NewProcessors() Processors {
 	return make(Processors, 0)
@@ -17,7 +26,7 @@ func (ps Processors) Add(processor Processor) Processors {
 }
 
 type message struct {
-	*vector
+	*vector.Vector
 	vectorID int
 	*model.Patent
 }
@@ -68,7 +77,7 @@ func genVec(p Processor, pchan chan *model.Patent, mchan chan *message, stop cha
 	for patent := range pchan {
 		vectorID := i
 		m := &message{
-			vector:   p.ToVec(patent),
+			Vector:   p.ToVec(patent),
 			vectorID: vectorID,
 			Patent:   patent,
 		}
@@ -84,7 +93,7 @@ func genVec(p Processor, pchan chan *model.Patent, mchan chan *message, stop cha
 // 并行地将向量存储到文件
 func saveVec(p Processor, mchan chan *message, stop chan<- struct{}) {
 	for m := range mchan {
-		err := p.SaveVec(m.vector)
+		err := p.SaveVec(m.Vector)
 		if err != nil {
 			panic(err)
 		}

@@ -11,6 +11,7 @@ import (
 
 	"vec/db"
 	"vec/model"
+	"vec/model/vector"
 )
 
 type strToVec struct {
@@ -20,7 +21,7 @@ type strToVec struct {
 }
 
 // ToVec 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
-func (p strToVec) ToVec(patent *model.Patent) *vector {
+func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 	request := gorequest.New()
 
 	// todo 联系上游接口添加 code, msg 字段
@@ -62,16 +63,16 @@ func (p strToVec) ToVec(patent *model.Patent) *vector {
 
 	// 目前每次只查询一个字符串，所以这里只有一个向量
 	vector0 := res.Data[0]
-	return NewVector(vector0, fmt.Sprintf("%s-%s", p.field, patent.ID))
+	return vector.NewVector(vector0, fmt.Sprintf("%s-%s", p.field, patent.ID))
 }
 
-func (p strToVec) SaveVec(vec *vector) error {
+func (p strToVec) SaveVec(vec *vector.Vector) error {
 	// fvecs 文件格式，对于每个向量：
 	// 1. 先写入4字节的整数dim，表示向量的维度
 	// 2. 再依次写入dim*4字节的浮点数，即向量的每个维度的值
 	// 再写入下一个向量，向量各维度之间、向量间无分隔符
-	err1 := binary.Write(p.vecWriter, binary.LittleEndian, int32(vec.dim()))
-	err2 := binary.Write(p.vecWriter, binary.LittleEndian, vec.vectors)
+	err1 := binary.Write(p.vecWriter, binary.LittleEndian, int32(vec.Dim()))
+	err2 := binary.Write(p.vecWriter, binary.LittleEndian, vec.Vectors())
 	if err1 != nil {
 		return err1
 	}
