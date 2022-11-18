@@ -77,7 +77,11 @@ func query(c *gin.Context) {
 			Fail(c, 50004, fmt.Errorf("get patent id by vector id error: %v", err).Error())
 			return
 		}
-		patentIDs = append(patentIDs, patentID)
+		if patentID != "" {
+			patentIDs = append(patentIDs, patentID)
+		} else {
+			fmt.Printf("vector id <%s-%s> not found in db\n", req.Field, vectorID)
+		}
 	}
 	Success(c, patentIDs)
 }
