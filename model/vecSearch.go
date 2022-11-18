@@ -1,11 +1,13 @@
 package model
 
 import (
+	"fmt"
+
 	"vec/db"
 )
 
-func GetPatentIDByVectorID(vecID string) (string, error) {
-	v, ok, err := GetRedis(db.Get().Redis, vecID)
+func GetPatentIDByVectorID(filed, vecID string) (string, error) {
+	v, ok, err := GetRedis(db.Get().Redis, fmt.Sprintf("%s-%s", filed, vecID))
 	if err != nil {
 		return "", err
 	}

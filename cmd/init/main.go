@@ -51,12 +51,12 @@ func main() {
 
 	// 测试
 	fmt.Println("测试一下向量和专利的对应关系")
-	testVecID := fmt.Sprintf("name-%d", 100)
+	testVecID := "100"
 
-	patentID, err := model.GetPatentIDByVectorID(testVecID)
+	patentID, err := model.GetPatentIDByVectorID("name", testVecID)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("ID 为 <%s> 的向量对应的专利ID为 <%s>", testVecID, patentID)
+	fmt.Printf("ID 为 <name-%s> 的向量对应的专利ID为 <%s>", testVecID, patentID)
 }

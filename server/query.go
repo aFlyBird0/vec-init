@@ -72,7 +72,7 @@ func query(c *gin.Context) {
 	// 根据向量 id 查询专利
 	patentIDs := make([]string, 0, len(vectorIDs))
 	for _, vectorID := range vectorIDs {
-		patentID, err := model.GetPatentIDByVectorID(vectorID)
+		patentID, err := model.GetPatentIDByVectorID(req.Field, vectorID)
 		if err != nil {
 			Fail(c, 50004, fmt.Errorf("get patent id by vector id error: %v", err).Error())
 			return
@@ -91,15 +91,17 @@ func queryDiskann(vecFile string) ([]string, error) {
 	res := struct {
 		Data []string `json:"data"`
 	}{}
-	httpResp, _, errs := gorequest.New().Post(url).Send(data).EndStruct(&res)
-	if len(errs) > 0 {
-		return nil, fmt.Errorf("query diskann error: %v", errs)
-	}
+	httpResp, body, errs := gorequest.New().Post(url).Send(data).EndStruct(&res)
 	if httpResp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http status code is %d", httpResp.StatusCode)
+	}
+	if len(errs) > 0 {
+		fmt.Printf("query diskann struct parse error, response body: %v\n", body)
+		return nil, fmt.Errorf("query diskann error: %v", errs)
 	}
 	if len(res.Data) == 0 {
 		return nil, fmt.Errorf("no vector id found")
 	}
+	fmt.Println(res.Data)
 	return res.Data, nil
 }

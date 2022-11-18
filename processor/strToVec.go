@@ -47,12 +47,12 @@ func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 	resp, body, errs := request.Post(p.reqUrl).
 		Send(payload).
 		EndStruct(res)
+	if resp.StatusCode != http.StatusOK {
+		panic("status code != 200, body: " + string(body))
+	}
 	if len(errs) > 0 {
 		fmt.Println("errs: ", errs)
 		panic(errs)
-	}
-	if resp.StatusCode != http.StatusOK {
-		panic("status code != 200, body: " + string(body))
 	}
 	if len(res.Data) < 1 {
 		fmt.Println(string(body))
