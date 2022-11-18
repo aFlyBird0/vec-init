@@ -32,7 +32,12 @@ func Get() *config {
 
 func readConfig() *config {
 	c := &config{}
-	err := viper.UnmarshalKey("mysql", &c.MysqlConfig)
+
+	err := viper.UnmarshalKey("server", &c.ServerConfig)
+	if err != nil {
+		panic(err)
+	}
+	err = viper.UnmarshalKey("mysql", &c.MysqlConfig)
 	if err != nil {
 		panic(err)
 	}

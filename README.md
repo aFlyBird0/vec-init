@@ -69,6 +69,42 @@ Response Body：
 
 把 `application.example.yml` 改名为 `application.yml` ，并修改其中的配置
 
+### 初始化
+
 ```bash
-go run main.go
+go run cmd/init/main.go
 ```
+
+运行结束后，会在配置文件中定义的文件夹(`server.VectorDir`)中建立子文件夹 `init`，并写入多个 `<field>.vec` 文件，其中 `<field>` 为配置文件中定义的字段名列表。
+
+### 查询
+
+```bash
+go run cmd/query/main.go
+```
+
+请求：
+
+POST，Body 示例：
+
+```json
+{
+    "field": "abstract",
+    "query": "这是请求内容，比如现在的field是abstract，表明要在摘要里搜数据，所以query传你想搜索的摘要"
+}
+```
+
+Response: 
+
+HTTP 状态码200为成功，其余请参照 code 和 msg。
+
+```json
+{
+  "code": 200,
+  "msg": "ok",
+  "data": ["123", "456", "789"]
+}
+```
+
+其实 data 是专利 id 列表。
+

@@ -1,10 +1,17 @@
 package config
 
 type config struct {
+	*ServerConfig
 	*MysqlConfig
 	*RedisConfig
 	Str2VecConfigs []*Str2VecConfig
 	*ConcurrencyConfig
+}
+
+type ServerConfig struct {
+	Host      string
+	Port      int
+	VectorDir string
 }
 
 type MysqlConfig struct {

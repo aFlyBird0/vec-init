@@ -15,6 +15,7 @@ import (
 func main() {
 	config.Init()
 	db.Init()
+	processor.Init()
 
 	database := db.Get()
 	fmt.Println("数据库初始化成功")

@@ -35,6 +35,19 @@ func (p *Patent) GetField(field string) string {
 	}
 }
 
+func FiledToPatent(field, value string) *Patent {
+	switch field {
+	case "name":
+		return &Patent{Name: value}
+	case "abstract":
+		return &Patent{AbstractCh: value}
+	case "claim":
+		return &Patent{Claim: value}
+	default:
+		return nil
+	}
+}
+
 func CountPatent() (int, error) {
 	var count int64
 	err := db.Get().Mysql.Model(&Patent{}).Count(&count).Error
@@ -155,5 +168,4 @@ func getPatentsOnePatch(ctx context.Context, pchan chan *Patent, pageChan chan i
 		default:
 		}
 	}
-
 }
