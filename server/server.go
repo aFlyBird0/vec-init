@@ -3,8 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 
@@ -17,10 +15,7 @@ type Response struct {
 	Data any    `json:"data"`
 }
 
-const queryVecDir = "query"
-
 func Serve() {
-	Init()
 	r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
 
@@ -55,16 +50,4 @@ func Fail(c *gin.Context, code int, msg string) {
 		Code: code,
 		Msg:  msg,
 	})
-}
-
-func Init() {
-	// 初始化向量文件夹
-	absPath, err := filepath.Abs(config.Get().VectorDir)
-	if err != nil {
-		panic(err)
-	}
-	err = os.MkdirAll(filepath.Join(absPath, queryVecDir), os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
 }

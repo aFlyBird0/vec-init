@@ -5,7 +5,9 @@ import (
 
 	"vec/config"
 	"vec/db"
+	"vec/diskann"
 	"vec/model"
+	"vec/model/vector"
 	"vec/processor"
 )
 
@@ -15,7 +17,7 @@ import (
 func main() {
 	config.Init()
 	db.Init()
-	processor.Init()
+	vector.Init()
 
 	database := db.Get()
 	fmt.Println("数据库初始化成功")
@@ -59,4 +61,10 @@ func main() {
 	}
 
 	fmt.Printf("ID 为 <name-%s> 的向量对应的专利ID为 <%s>", testVecID, patentID)
+
+	// 调用 diskann 建立索引
+	diskann.BuildIndex()
+
+	fmt.Println("所有任务完成（索引建立异步进行中）")
+
 }

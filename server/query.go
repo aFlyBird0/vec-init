@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/parnurzeal/gorequest"
 
 	"vec/config"
 	"vec/model"
+	"vec/model/vector"
 	"vec/processor"
 )
 
@@ -36,12 +37,11 @@ func query(c *gin.Context) {
 	// 使用正则去除 req.Query 中的所有空白字符
 	queryWithoutBlank := regexp.MustCompile(`\s+`).ReplaceAllString(req.Query, "")
 	// 拼接查询向量文件的路径
-	vecFileName := fmt.Sprintf("%s.vec", queryWithoutBlank)
-	path := filepath.Join(config.Get().ServerConfig.VectorDir, queryVecDir, vecFileName)
+	vecFilePath := vector.GetQueryVectorFullPath(queryWithoutBlank)
 	// 根据不同的字段，使用不同的处理器
 	for _, conf := range config.Get().Str2VecConfigs {
 		if conf.Field == req.Field {
-			file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0666)
+			file, err := os.OpenFile(vecFilePath, os.O_CREATE|os.O_WRONLY, 0666)
 			if err != nil {
 				Fail(c, 50001, "open file error: "+err.Error())
 				return
@@ -63,34 +63,43 @@ func query(c *gin.Context) {
 		return
 	}
 
-	vectorIDs, err := queryDiskann(path)
+	vectorIDScores, err := queryDiskann(vecFilePath, req.Field)
 	if err != nil {
 		Fail(c, 50003, err.Error())
 		return
 	}
 
 	// 根据向量 id 查询专利
-	patentIDs := make([]string, 0, len(vectorIDs))
-	for _, vectorID := range vectorIDs {
-		patentID, err := model.GetPatentIDByVectorID(req.Field, vectorID)
+	patentIDScores := make([]IDScore, 0, len(vectorIDScores))
+	for _, idScore := range vectorIDScores {
+		patentID, err := model.GetPatentIDByVectorID(req.Field, idScore.ID)
 		if err != nil {
 			Fail(c, 50004, fmt.Errorf("get patent id by vector id error: %v", err).Error())
 			return
 		}
 		if patentID != "" {
-			patentIDs = append(patentIDs, patentID)
+			patentIDScores = append(patentIDScores, IDScore{
+				ID:    patentID,
+				Score: idScore.Score,
+			})
 		} else {
-			fmt.Printf("vector id <%s-%s> not found in db\n", req.Field, vectorID)
+			fmt.Printf("vector id <%s-%s> not found in db\n", req.Field, idScore.ID)
 		}
 	}
-	Success(c, patentIDs)
+	Success(c, patentIDScores)
 }
 
-// 根据 fevs 文件，调用 diskann，获得最相似的专利向量的 id
-func queryDiskann(vecFile string) ([]string, error) {
-	url := "http://10.101.32.33:18180/SearchDiskIndex"
+type IDScore struct {
+	ID    string  `json:"id"`
+	Score float64 `json:"score"`
+}
+
+// 根据 fevs 文件，指定索引名（field），调用 diskann，获得最相似的专利向量的 id 和相似度
+func queryDiskann(vecFile, field string) ([]IDScore, error) {
+	url := config.Get().DiskannConfig.QueryUrl
 	data := map[string]any{
-		"fvec": vecFile,
+		"fvec":  vecFile,
+		"field": field,
 	}
 	res := struct {
 		Data []string `json:"data"`
@@ -106,6 +115,22 @@ func queryDiskann(vecFile string) ([]string, error) {
 	if len(res.Data) == 0 {
 		return nil, fmt.Errorf("no vector id found")
 	}
-	fmt.Println(res.Data)
-	return res.Data, nil
+	// 返回的数据是一个 string 数组，[id1, score1, id2, score2, ...]
+	if len(res.Data)%2 != 0 {
+		return nil, fmt.Errorf("id and score count not match")
+	}
+
+	idScores := make([]IDScore, 0, len(res.Data)/2)
+
+	for i := 0; i < len(res.Data); i += 2 {
+		score, err := strconv.ParseFloat(res.Data[i+1], 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse score error, data: %v, id: %s, score: %s, err: %v", res.Data, res.Data[i], res.Data[i+1], err)
+		}
+		idScores = append(idScores, IDScore{
+			ID:    res.Data[i],
+			Score: score,
+		})
+	}
+	return idScores, nil
 }

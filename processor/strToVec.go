@@ -6,17 +6,13 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/parnurzeal/gorequest"
 
-	"vec/config"
 	"vec/db"
 	"vec/model"
 	"vec/model/vector"
 )
-
-const initVecSubDir = "init"
 
 type strToVec struct {
 	reqUrl    string
@@ -95,16 +91,15 @@ func (p strToVec) addPrefixToVecID(vecID int) string {
 }
 
 // NewStrToVec 传入字段名和接口地址，返回一个处理器
-func NewStrToVec(filed, reqUrl string) Processor {
-	vecFilename := fmt.Sprintf("%s.vec", filed)
-	vecFilePath := filepath.Join(config.Get().ServerConfig.VectorDir, initVecSubDir, vecFilename)
+func NewStrToVec(field, reqUrl string) Processor {
+	vecFilePath := vector.GetIndexVectorFullPath(field)
 	vecFile, err := os.OpenFile(vecFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0755)
 	if err != nil {
 		panic(err)
 	}
 
 	return &strToVec{
-		field:     filed,
+		field:     field,
 		reqUrl:    reqUrl,
 		vecWriter: vecFile,
 	}

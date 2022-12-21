@@ -1,7 +1,7 @@
 server:
   host: 0.0.0.0
-  port: 8080
-  vectorDir: ./vectors
+  port: 8080 # 服务运行端口
+  vectorDir: ./vectors # 生成的向量文件和查询向量文件的存储位置
 
 mysql:
   host:
@@ -17,14 +17,14 @@ redis:
   password:
   database: 0
 
-concurrency:
-  pageSize: 1000
-  patentPoolSize: 10000
-  vectorPoolSize: 10000
-  queryWorkerSize: 20
+concurrency: # 数据库查询并发设置
+  pageSize: 1000 # 每页查询的数量
+  patentPoolSize: 10000 # 专利缓冲池大小，应为 pageSize 数倍到数十倍
+  vectorPoolSize: 10000 # 向量缓冲池大小，应为 pageSize 数倍到数十倍
+  queryWorkerSize: 20 # 数据库查询并发数
 
 
-str2vec:
+str2vec: # 向量化的配置，程序会取出每个专利的每个定义的filed，然后请求url来获得向量化结果
   - field: "name"
     url: ""
   - field: "abstract"
@@ -32,3 +32,6 @@ str2vec:
   - field: "claim"
     url: ""
 
+diskann: #上游服务diskann的配置
+  buildIndexUrl: "" # 索引构建的服务地址
+  queryUrl: "" # 索引查询的服务地址

@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -55,8 +53,10 @@ func readConfig() *config {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println(c.Str2VecConfigs)
+	err = viper.UnmarshalKey("diskann", &c.DiskannConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	return c
 }

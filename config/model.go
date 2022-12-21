@@ -6,6 +6,7 @@ type config struct {
 	*RedisConfig
 	Str2VecConfigs []*Str2VecConfig
 	*ConcurrencyConfig
+	*DiskannConfig
 }
 
 type ServerConfig struct {
@@ -40,4 +41,9 @@ type ConcurrencyConfig struct {
 	PatentPoolSize  int
 	VectorPoolSize  int
 	QueryWorkerSize int
+}
+
+type DiskannConfig struct {
+	BuildIndexUrl string
+	QueryUrl      string
 }

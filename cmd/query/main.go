@@ -3,7 +3,7 @@ package main
 import (
 	"vec/config"
 	"vec/db"
-	"vec/processor"
+	"vec/model/vector"
 	"vec/server"
 )
 
@@ -12,6 +12,6 @@ import (
 func main() {
 	config.Init()
 	db.Init()
-	processor.Init()
+	vector.Init()
 	server.Serve()
 }

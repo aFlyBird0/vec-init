@@ -36,7 +36,7 @@ func (p strToVecMock) addPrefixToVecID(vecID int) string {
 
 // NewStrToVec 传入字段名和接口地址，返回一个处理器
 func NewStrToVecMock(filed, reqUrl string) Processor {
-	var vecFilename = fmt.Sprintf("%s.vec", filed)
+	vecFilename := vector.GetIndexVectorFullPath(filed)
 	vecFile, err := os.OpenFile(vecFilename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0755)
 	if err != nil {
 		panic(err)
