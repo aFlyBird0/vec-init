@@ -101,6 +101,8 @@ Body 示例：
 }
 ```
 
+其中，目前支持的 field 有："name", "abstract", "claim"。
+
 Response: 
 
 HTTP 状态码200为成功，其余请参照 code 和 msg。

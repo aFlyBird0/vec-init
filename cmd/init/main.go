@@ -60,7 +60,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("ID 为 <name-%s> 的向量对应的专利ID为 <%s>", testVecID, patentID)
+	fmt.Printf("ID 为 <name-%s> 的向量对应的专利ID为 <%s>\n", testVecID, patentID)
 
 	// 调用 diskann 建立索引
 	diskann.BuildIndex()
