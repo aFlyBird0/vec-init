@@ -27,5 +27,5 @@ func (v *Vector) Vectors() []float32 {
 }
 
 func AddFieldToVectorID(field string, vectorID int64) string {
-	return fmt.Sprintf("test-%s-%d", field, vectorID)
+	return fmt.Sprintf("%s-%d", field, vectorID)
 }
