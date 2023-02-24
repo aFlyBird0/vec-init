@@ -37,7 +37,7 @@ func Serve() {
 
 }
 
-func Success(c *gin.Context, data interface{}) {
+func Success(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, Response{
 		Code: 0,
 		Msg:  "ok",

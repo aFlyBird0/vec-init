@@ -6,7 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func SetRedis(rdb *redis.Client, key string, value interface{}) error {
+func SetRedis(rdb *redis.Client, key string, value any) error {
 	ctx := context.Background()
 	err := rdb.Set(ctx, key, value, 0).Err()
 

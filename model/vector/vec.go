@@ -1,5 +1,7 @@
 package vector
 
+import "fmt"
+
 type Vector struct {
 	description string
 	vectors     []float32
@@ -22,4 +24,8 @@ func (v *Vector) Dim() int {
 
 func (v *Vector) Vectors() []float32 {
 	return v.vectors
+}
+
+func AddFieldToVectorID(field string, vectorID int64) string {
+	return fmt.Sprintf("test-%s-%d", field, vectorID)
 }

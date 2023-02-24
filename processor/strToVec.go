@@ -20,6 +20,10 @@ type strToVec struct {
 	vecWriter io.ReadWriteCloser
 }
 
+func (p strToVec) Field() string {
+	return p.field
+}
+
 // ToVec 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
 func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 	request := gorequest.New()
@@ -36,7 +40,7 @@ func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 		// 目前的生产环境是 1 个向量，768 维
 		Data [][]float32 `json:"data"`
 	}{}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		// 传入的字符串数组，目前先每次数组里只查询一个字符串
 		"strarr": []string{patent.GetField(p.field)},
 	}
@@ -64,6 +68,68 @@ func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 	// 目前每次只查询一个字符串，所以这里只有一个向量
 	vector0 := res.Data[0]
 	return vector.NewVector(vector0, fmt.Sprintf("%s-%s", p.field, patent.ID))
+}
+
+// ToVecs 把专利列表转换成向量
+// 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
+func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
+	if len(patents) < 1 {
+		return nil
+	}
+	request := gorequest.New()
+	// todo 联系上游接口添加 code, msg 字段
+	res := &struct {
+		// 二维切片
+		// 内层是向量，每个向量由n维的浮点数构成
+		// 外层是向量的集合，每个查询的字符串都会返回一个对应的向量
+		// 其实模型服务端传的是双精度的浮点数
+		// 但是diskann只支持单精度的浮点数，所以这里舍弃了精度
+		// 例如：[ [1.0, 2.0, 3.0], [4.0, 5.0, 6.0] ]
+		// 一共有两个向量，每个向量有三个维度
+		// 目前的生产环境是 1 个向量，768 维
+		Data [][]float32 `json:"data"`
+	}{}
+	genQueryFiled := func(patents []*model.Patent) []string {
+		arr := make([]string, 0, len(patents))
+		for _, patent := range patents {
+			arr = append(arr, patent.GetField(p.field))
+		}
+		return arr
+	}
+	payload := map[string]any{
+		// 传入的字符串数组，目前先每次数组里只查询一个字符串
+		"strarr": genQueryFiled(patents),
+	}
+	resp, body, errs := request.Post(p.reqUrl).
+		Send(payload).
+		EndStruct(res)
+	if resp.StatusCode != http.StatusOK {
+		panic("status code != 200, body: " + string(body))
+	}
+	if len(errs) > 0 {
+		fmt.Println("errs: ", errs)
+		panic(errs)
+	}
+	if len(res.Data) < 1 {
+		fmt.Println(string(body))
+		panic("response data length < 1")
+	}
+	for _, v := range res.Data {
+		if len(v) < 1 {
+			fmt.Println(string(body))
+			panic("response data length < 1")
+		}
+	}
+	// 把返回的结果转换成向量
+	httpRes2Vecs := func(data [][]float32) []*vector.Vector {
+		vecs := make([]*vector.Vector, 0, len(data))
+		for i, v := range data {
+			vecs = append(vecs, vector.NewVector(v, fmt.Sprintf("%s-%s", p.field, patents[i].ID)))
+		}
+		return vecs
+	}
+	return httpRes2Vecs(res.Data)
+
 }
 
 func (p strToVec) SaveVec(vec *vector.Vector) error {
