@@ -52,7 +52,7 @@ func main() {
 
 	source := ext.NewChanSource(patentsTypeAny)
 	flows := flow.FanOut(source, len(processors))
-	batchFlow := streamUtil.NewBatchFlow(10, 1*time.Second)
+	batchFlow := streamUtil.NewBatchFlow(500, 1*time.Second)
 
 	//sink := ext.NewStdoutSink()
 
@@ -94,6 +94,7 @@ func strToVecBatch(p processor.Processor) streams.Flow {
 		for i, _ := range patents {
 			patentsRealType[i] = patents[i].(*model.Patent)
 		}
+		fmt.Printf("%v, 转换专利到向量，本批专利数量：%d\n", time.Now(), len(patentsRealType))
 
 		vectors := p.ToVecs(patentsRealType)
 
