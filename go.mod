@@ -6,10 +6,10 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/parnurzeal/gorequest v0.2.16
+	github.com/reugn/go-streams v0.9.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.14.0
 	github.com/xxjwxc/gowp v0.0.0-20220528192505-f87b7668d4ff
-	go.uber.org/multierr v1.8.0
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.1
 )
@@ -46,7 +46,6 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/xxjwxc/public v0.0.0-20210518123934-6cc0965f0bc5 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
 	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect

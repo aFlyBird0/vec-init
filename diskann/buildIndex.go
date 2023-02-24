@@ -26,7 +26,7 @@ func BuildOneIndex(field string) {
 func buildOneIndex(indexName, vectorFile, buildIndexUrl string) {
 	fmt.Printf("已经请求了 diskann 的 buildIndex 服务，url: %s, fvec: %s, field: %s\n", buildIndexUrl, vectorFile, indexName)
 	// 因为响应是异步的，所以这里不需要等待响应
-	gorequest.New().Post(buildIndexUrl).Send(map[string]interface{}{
+	gorequest.New().Post(buildIndexUrl).Send(map[string]any{
 		"fvec":  vectorFile,
 		"field": indexName,
 	}).End()

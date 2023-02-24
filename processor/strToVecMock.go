@@ -15,6 +15,18 @@ type strToVecMock struct {
 	vecWriter io.ReadWriteCloser
 }
 
+func (p strToVecMock) Field() string {
+	return p.field
+}
+
+func (p strToVecMock) ToVecs(ps []*model.Patent) []*vector.Vector {
+	vectors := make([]*vector.Vector, 0, len(ps))
+	for _, patent := range ps {
+		vectors = append(vectors, p.ToVec(patent))
+	}
+	return vectors
+}
+
 // ToVec 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
 func (p strToVecMock) ToVec(patent *model.Patent) *vector.Vector {
 	return vector.NewVector(nil, fmt.Sprintf("%s-%s-%s-%s-Vector", p.reqUrl, patent.ID, p.field, patent.GetField(p.field)))

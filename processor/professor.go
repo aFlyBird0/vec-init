@@ -9,8 +9,10 @@ import (
 type (
 	Processor interface {
 		ToVec(p *model.Patent) *vector.Vector
+		ToVecs(ps []*model.Patent) []*vector.Vector
 		SaveVec(vec *vector.Vector) error
 		SaveVecIDAndPatentID(p *model.Patent, vecID int) error
+		Field() string
 	}
 
 	Processors []Processor
