@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// 这个stop收到了信号，说明专利查询协程已经结束了
-	<-stop
+	//<-stop
 
 	wg.Wait() //等待前面的协程结束
 
@@ -203,5 +203,4 @@ func transformChan(in <-chan *model.Patent, out chan<- any) {
 	for e := range in {
 		out <- e
 	}
-	close(out)
 }

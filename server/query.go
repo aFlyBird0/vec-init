@@ -72,7 +72,11 @@ func query(c *gin.Context) {
 	// 根据向量 id 查询专利
 	patentIDScores := make([]IDScore, 0, len(vectorIDScores))
 	for _, idScore := range vectorIDScores {
-		patentID, err := model.GetPatentIDByVectorID(req.Field, idScore.ID)
+		id, err := strconv.ParseInt(idScore.ID, 10, 64)
+		if err != nil {
+			fmt.Printf("err parsing ids from diskann response, response: %v, err: %v\n", patentIDScores, err)
+		}
+		patentID, err := model.GetPatentIDByVectorID(req.Field, id)
 		if err != nil {
 			Fail(c, 50004, fmt.Errorf("get patent id by vector id error: %v", err).Error())
 			return

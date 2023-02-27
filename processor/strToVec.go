@@ -103,8 +103,8 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 	resp, body, errs := request.Post(p.reqUrl).
 		Send(payload).
 		EndStruct(res)
-	if resp.StatusCode != http.StatusOK {
-		panic("status code != 200, body: " + string(body))
+	if resp == nil || resp.StatusCode != http.StatusOK {
+		panic("str2vec status code != 200, body: " + string(body))
 	}
 	if len(errs) > 0 {
 		fmt.Println("errs: ", errs)
@@ -112,12 +112,12 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 	}
 	if len(res.Data) < 1 {
 		fmt.Println(string(body))
-		panic("response data length < 1")
+		panic("str2vec response data length < 1")
 	}
 	for _, v := range res.Data {
 		if len(v) < 1 {
 			fmt.Println(string(body))
-			panic("response data length < 1")
+			panic("str2vec response data length < 1")
 		}
 	}
 	// 把返回的结果转换成向量
