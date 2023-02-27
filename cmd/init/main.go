@@ -53,14 +53,14 @@ func main() {
 
 	// 测试
 	fmt.Println("测试一下向量和专利的对应关系")
-	testVecID := "100"
+	testVecID := int64(99)
 
 	patentID, err := model.GetPatentIDByVectorID("name", testVecID)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("ID 为 <name-%s> 的向量对应的专利ID为 <%s>\n", testVecID, patentID)
+	fmt.Printf("ID 为 <name-%d> 的向量对应的专利ID为 <%s>\n", testVecID, patentID)
 
 	// 调用 diskann 建立索引
 	diskann.BuildIndex()

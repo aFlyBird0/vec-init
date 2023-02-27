@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/reugn/go-streams"
@@ -9,6 +10,7 @@ import (
 
 	"vec/config"
 	"vec/db"
+	"vec/diskann"
 	"vec/model"
 	"vec/model/vector"
 	"vec/processor"
@@ -52,9 +54,12 @@ func main() {
 
 	source := ext.NewChanSource(patentsTypeAny)
 	flows := flow.FanOut(source, len(processors))
+	// 把专利分批，统一请求向量化服务（每批500个，目前向量化接口一批最多能容纳510个）
 	batchFlow := streamUtil.NewBatchFlow(500, 1*time.Second)
 
 	//sink := ext.NewStdoutSink()
+
+	var wg sync.WaitGroup
 
 	for i, p := range processors {
 		// 获取转成向量后的flow
@@ -76,14 +81,45 @@ func main() {
 		//redisSink := ext.NewFileSink(vector.GetIndexVectorFullPath(p.Field()) + ".redis")
 		redisSink := streamUtil.NewRedisSink(p)
 
-		go saveVecFlow.
-			//Via(extractVector()).
-			To(saveVecSink)
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			saveVecFlow.
+				//Via(extractVector()).
+				To(saveVecSink)
+		}(&wg)
 
-		redisFlow.
-			//Via(mockSaveVecIDAndPatentID()).
-			To(redisSink)
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			redisFlow.
+				//Via(mockSaveVecIDAndPatentID()).
+				To(redisSink)
+		}(&wg)
 	}
+
+	// 这个stop收到了信号，说明专利查询协程已经结束了
+	<-stop
+
+	wg.Wait() //等待前面的协程结束
+
+	fmt.Println("str to vec done")
+
+	// 测试
+	fmt.Println("测试一下向量和专利的对应关系")
+	testVecID := int64(99)
+
+	patentID, err := model.GetPatentIDByVectorID("name", testVecID)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("ID 为 <name-%d> 的向量对应的专利ID为 <%s>\n", testVecID, patentID)
+
+	// 调用 diskann 建立索引
+	diskann.BuildIndex()
+
+	fmt.Println("所有任务完成（索引建立异步进行中）")
 
 }
 
