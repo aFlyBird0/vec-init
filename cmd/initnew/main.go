@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -54,14 +56,16 @@ func main() {
 
 	source := ext.NewChanSource(patentsTypeAny)
 	flows := flow.FanOut(source, len(processors))
-	// 把专利分批，统一请求向量化服务（每批500个，目前向量化接口一批最多能容纳510个）
-	batchFlow := streamUtil.NewBatchFlow(500, 1*time.Second)
 
 	//sink := ext.NewStdoutSink()
 
 	var wg sync.WaitGroup
 
 	for i, p := range processors {
+		fmt.Printf("flows %d: in:%v, out:%v\n", i, flows[i].In(), flows[i].Out())
+		p := p
+		// 把专利分批，统一请求向量化服务（每批500个，目前向量化接口一批最多能容纳510个）
+		batchFlow := streamUtil.NewBatchFlow(500, 1*time.Second)
 		// 获取转成向量后的flow
 		// 最终的结果是，每个元素都是vectorPatentAndVectorID，即 包含专利、向量、向量id的结构体
 		vectorAndPatentFlow := flows[i].
@@ -96,10 +100,12 @@ func main() {
 				//Via(mockSaveVecIDAndPatentID()).
 				To(redisSink)
 		}(&wg)
+		fmt.Printf("生成处理器 %v 成功\n", p.Field())
 	}
 
 	// 这个stop收到了信号，说明专利查询协程已经结束了
-	//<-stop
+	<-stop
+	fmt.Println("111")
 
 	wg.Wait() //等待前面的协程结束
 
@@ -130,7 +136,11 @@ func strToVecBatch(p processor.Processor) streams.Flow {
 		for i, _ := range patents {
 			patentsRealType[i] = patents[i].(*model.Patent)
 		}
-		fmt.Printf("%v, 转换专利到向量，本批专利数量：%d\n", time.Now(), len(patentsRealType))
+
+		now := time.Now()
+		hashID := getHashValue(now.Format("2006-01-02 15:04:05") + p.Field())
+		fmt.Printf("%v, 转换专利到向量，本批专利数量：%d, 向量化字段：%v，本次任务标识：%v\n",
+			now.Format("2006-01-02 15:04:05"), len(patentsRealType), p.Field(), hashID)
 
 		vectors := p.ToVecs(patentsRealType)
 
@@ -140,6 +150,8 @@ func strToVecBatch(p processor.Processor) streams.Flow {
 				Patent: patent,
 			})
 		}
+		fmt.Printf("%v, 转换专利到向量，本批专利数量：%d, 向量化字段：%v, 本次任务标识：%v，转换完成\n",
+			time.Now().Format("2006-01-02 15:04:05"), len(patentsRealType), p.Field(), hashID)
 
 		return ms
 	}
@@ -203,4 +215,11 @@ func transformChan(in <-chan *model.Patent, out chan<- any) {
 	for e := range in {
 		out <- e
 	}
+	close(out)
+}
+
+func getHashValue(str string) string {
+	hashID := md5.New()
+	hashID.Write([]byte(str))
+	return hex.EncodeToString(hashID.Sum(nil))
 }
