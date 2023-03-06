@@ -112,6 +112,7 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 			EndStruct(res)
 		if len(errs) > 0 {
 			fmt.Printf("str2vec errs: %v, body: %v\n", errs, string(body))
+			time.Sleep(30 * time.Second)
 			continue
 		}
 		// 如果上游服务器显存有压力，会返回 419 状态码
@@ -124,12 +125,14 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 		}
 		if len(res.Data) != len(patents) {
 			fmt.Printf("str2vec response data length != patents length, data length: %v, patents length: %v\n", len(res.Data), len(patents))
+			time.Sleep(30 * time.Second)
 			continue
 		}
 
 		for _, v := range res.Data {
 			if len(v) < 1 {
 				fmt.Printf("str2vec vector dimension < 1, vectors: %v\n", res.Data)
+				time.Sleep(30 * time.Second)
 				continue
 			}
 		}
