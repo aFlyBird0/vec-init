@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/parnurzeal/gorequest"
 
@@ -25,6 +26,7 @@ func (p strToVec) Field() string {
 }
 
 // ToVec 这里不能用指针 receiver，否则后面循环的时候，可能会导致 p.vecWriter 一直是最后一个文件的指针
+// Deprecated: 请使用 ToVecs
 func (p strToVec) ToVec(patent *model.Patent) *vector.Vector {
 	request := gorequest.New()
 
@@ -86,7 +88,7 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 		// 但是diskann只支持单精度的浮点数，所以这里舍弃了精度
 		// 例如：[ [1.0, 2.0, 3.0], [4.0, 5.0, 6.0] ]
 		// 一共有两个向量，每个向量有三个维度
-		// 目前的生产环境是 1 个向量，768 维
+		// 目前的生产环境是 最大510 个向量，每个768 维
 		Data [][]float32 `json:"data"`
 	}{}
 	genQueryFiled := func(patents []*model.Patent) []string {
@@ -100,25 +102,38 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 		// 传入的字符串数组，目前先每次数组里只查询一个字符串
 		"strarr": genQueryFiled(patents),
 	}
-	resp, body, errs := request.Post(p.reqUrl).
-		Send(payload).
-		EndStruct(res)
-	if resp == nil || resp.StatusCode != http.StatusOK {
-		panic("str2vec status code != 200, body: " + string(body))
-	}
-	if len(errs) > 0 {
-		fmt.Println("errs: ", errs)
-		panic(errs)
-	}
-	if len(res.Data) < 1 {
-		fmt.Println(string(body))
-		panic("str2vec response data length < 1")
-	}
-	for _, v := range res.Data {
-		if len(v) < 1 {
-			fmt.Println(string(body))
-			panic("str2vec response data length < 1")
+
+	// 重复请求，直到成功
+	for {
+		resp, body, errs := request.
+			Post(p.reqUrl).
+			Timeout(1 * time.Minute).
+			Send(payload).
+			EndStruct(res)
+		if len(errs) > 0 {
+			fmt.Printf("str2vec errs: %v, body: %v\n", errs, string(body))
+			continue
 		}
+		// 如果上游服务器显存有压力，会返回 419 状态码
+		if resp == nil || resp.StatusCode != http.StatusOK {
+			fmt.Printf("str2vec status code != 200, status code: %v, body: %v\n", resp.StatusCode, string(body))
+			if resp.StatusCode == 419 {
+				time.Sleep(30 * time.Second)
+			}
+			continue
+		}
+		if len(res.Data) != len(patents) {
+			fmt.Printf("str2vec response data length != patents length, data length: %v, patents length: %v\n", len(res.Data), len(patents))
+			continue
+		}
+
+		for _, v := range res.Data {
+			if len(v) < 1 {
+				fmt.Printf("str2vec vector dimension < 1, vectors: %v\n", res.Data)
+				continue
+			}
+		}
+		break
 	}
 	// 把返回的结果转换成向量
 	httpRes2Vecs := func(data [][]float32) []*vector.Vector {
