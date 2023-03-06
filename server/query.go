@@ -109,12 +109,15 @@ func queryDiskann(vecFile, field string) ([]IDScore, error) {
 		Data []string `json:"data"`
 	}{}
 	httpResp, body, errs := gorequest.New().Post(url).Send(data).EndStruct(&res)
-	if httpResp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http status code is %d", httpResp.StatusCode)
-	}
 	if len(errs) > 0 {
 		fmt.Printf("query diskann struct parse error, response body: %v\n", body)
 		return nil, fmt.Errorf("query diskann error: %v", errs)
+	}
+	if httpResp == nil {
+		return nil, fmt.Errorf("http response is nil")
+	}
+	if httpResp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http status code is %d", httpResp.StatusCode)
 	}
 	if len(res.Data) == 0 {
 		return nil, fmt.Errorf("no vector id found")
