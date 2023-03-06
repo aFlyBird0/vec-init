@@ -51,7 +51,7 @@ func main() {
 
 	processors := processor.NewProcessors()
 	for _, c := range config.Get().Str2VecConfigs {
-		processors = processors.Add(processor.NewStrToVec(c.Field, c.Url))
+		processors = processors.Add(processor.NewStrToVecMock(c.Field, c.Url))
 	}
 
 	source := ext.NewChanSource(patentsTypeAny)
@@ -78,18 +78,18 @@ func main() {
 		messageFlows := flow.FanOut(vectorAndPatentFlow, 2)
 
 		saveVecFlow := messageFlows[0]
-		//saveVecSink := ext.NewFileSink(vector.GetIndexVectorFullPath(p.Field()))
-		saveVecSink := streamUtil.NewBinaryFileSink(vector.GetIndexVectorFullPath(p.Field()))
+		saveVecSink := ext.NewFileSink(vector.GetIndexVectorFullPath(p.Field()) + ".vec")
+		//saveVecSink := streamUtil.NewBinaryFileSink(vector.GetIndexVectorFullPath(p.Field()))
 
 		redisFlow := messageFlows[1]
-		//redisSink := ext.NewFileSink(vector.GetIndexVectorFullPath(p.Field()) + ".redis")
-		redisSink := streamUtil.NewRedisSink(p)
+		redisSink := ext.NewFileSink(vector.GetIndexVectorFullPath(p.Field()) + ".redis")
+		//redisSink := streamUtil.NewRedisSink(p)
 
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 			saveVecFlow.
-				//Via(extractVector()).
+				Via(extractVector()).
 				To(saveVecSink)
 		}(&wg)
 
@@ -97,7 +97,7 @@ func main() {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 			redisFlow.
-				//Via(mockSaveVecIDAndPatentID()).
+				Via(mockSaveVecIDAndPatentID()).
 				To(redisSink)
 		}(&wg)
 		fmt.Printf("生成处理器 %v 成功\n", p.Field())
