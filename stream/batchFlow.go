@@ -7,8 +7,8 @@ import (
 	"github.com/reugn/go-streams"
 )
 
-type BatchFlow struct {
-	batchSize int
+type Batch[T any] struct {
+	batchSize uint
 	batchTime time.Duration
 	ticker    *time.Ticker
 	in        chan any
@@ -18,19 +18,19 @@ type BatchFlow struct {
 	done      chan struct{}
 }
 
-// Verify BatchFlow implements the streams.Flow interface
-var _ streams.Flow = (*BatchFlow)(nil)
+// Verify Batch implements the streams.Flow interface
+var _ streams.Flow = (*Batch[any])(nil)
 
-// NewBatchFlow returns a new BatchFlow instance
+// NewBatch returns a new Batch instance
 //
 // it will batch the incoming elements into a slice
 // whether the batch size is reached or the batch time is elapsed.
-func NewBatchFlow(batchSize int, batchTime time.Duration) *BatchFlow {
+func NewBatch[T any](batchSize uint, batchTime time.Duration) *Batch[T] {
 	if batchSize <= 0 {
 		panic("batch size should greater than 0")
 	}
 
-	bf := &BatchFlow{
+	bf := &Batch[T]{
 		batchSize: batchSize,
 		batchTime: batchTime,
 		ticker:    time.NewTicker(batchTime),
@@ -39,74 +39,69 @@ func NewBatchFlow(batchSize int, batchTime time.Duration) *BatchFlow {
 		out:       make(chan any),
 		done:      make(chan struct{}),
 	}
-	go bf.batchBySize()
-	go bf.batchByTime()
+
+	go bf.doStream()
 
 	return bf
 }
 
 // Via sends the flow to the next stage via specified flow
-func (bf *BatchFlow) Via(flow streams.Flow) streams.Flow {
+func (bf *Batch[T]) Via(flow streams.Flow) streams.Flow {
 	go bf.transmit(flow)
 
 	return flow
 }
 
 // To sends the flow to the given sink
-func (bf *BatchFlow) To(sink streams.Sink) {
+func (bf *Batch[T]) To(sink streams.Sink) {
 	bf.transmit(sink)
 }
 
-// Out returns the output channel of the BatchFlow
-func (bf *BatchFlow) Out() <-chan any {
+// Out returns the output channel of the Batch
+func (bf *Batch[T]) Out() <-chan any {
 	return bf.out
 }
 
-// In returns the input channel of the BatchFlow
-func (bf *BatchFlow) In() chan<- any {
+// In returns the input channel of the Batch
+func (bf *Batch[T]) In() chan<- any {
 	return bf.in
 }
 
-func (bf *BatchFlow) batchBySize() {
-	for elem := range bf.in {
-		bf.mu.Lock()
-		bf.buffer = append(bf.buffer, elem)
-		bf.mu.Unlock()
-		if len(bf.buffer) >= bf.batchSize {
-			bf.flush()
-		}
-	}
-	close(bf.done)
-	close(bf.out)
-}
+func (bf *Batch[T]) doStream() {
+	batches := make([]T, 0, bf.batchSize)
+	tick := time.NewTicker(bf.batchTime)
 
-func (bf *BatchFlow) batchByTime() {
-	defer bf.ticker.Stop()
+	defer func() {
+		tick.Stop()
+		if len(batches) > 0 {
+			bf.out <- batches
+		}
+		close(bf.out)
+	}()
 
 	for {
 		select {
-		case <-bf.ticker.C:
-			bf.flush()
-		case <-bf.done:
-			return
+		case v, ok := <-bf.in:
+			if ok {
+				batches = append(batches, v.(T))
+				if len(batches) >= int(bf.batchSize) {
+					bf.out <- batches
+					tick.Reset(bf.batchTime)
+					batches = make([]T, 0, bf.batchSize)
+				}
+			} else {
+				return
+			}
+		case <-tick.C:
+			if len(batches) > 0 {
+				bf.out <- batches
+				batches = make([]T, 0, bf.batchSize)
+			}
 		}
 	}
 }
 
-// flush sends the batched items to the next flow
-func (bf *BatchFlow) flush() {
-	bf.mu.Lock()
-	buffer := bf.buffer
-	bf.buffer = make([]any, 0, bf.batchSize)
-	bf.ticker.Reset(bf.batchTime)
-	bf.mu.Unlock()
-
-	if len(buffer) > 0 {
-		bf.out <- buffer
-	}
-}
-
-func (bf *BatchFlow) transmit(inlet streams.Inlet) {
+func (bf *Batch[T]) transmit(inlet streams.Inlet) {
 	for item := range bf.out {
 		inlet.In() <- item
 	}
