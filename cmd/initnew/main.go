@@ -150,7 +150,8 @@ func strToVecBatch(p processor.Processor) streams.Flow {
 		return ms
 	}
 
-	return flow.NewMap[[]*model.Patent, []*streamUtil.VectorPatent](f, 20)
+	// 这里并发就设置成1了，上游不支持并行，一并行就出错
+	return flow.NewMap[[]*model.Patent, []*streamUtil.VectorPatent](f, 1)
 }
 
 func flatten[T any](parallelism uint) streams.Flow {

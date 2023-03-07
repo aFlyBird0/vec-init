@@ -107,7 +107,7 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 	for {
 		resp, body, errs := request.
 			Post(p.reqUrl).
-			Timeout(1 * time.Minute).
+			Timeout(2 * time.Minute).
 			Send(payload).
 			EndStruct(res)
 		if len(errs) > 0 {
