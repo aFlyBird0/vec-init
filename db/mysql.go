@@ -16,7 +16,7 @@ func initMysql() *gorm.DB {
 		Pass           string
 		DB             string
 		ConnectTimeout uint
-	}{Addr: config.Get().MysqlConfig.Host,
+	}{Addr: config.Get().MysqlConfig.Host + ":" + fmt.Sprint(config.Get().MysqlConfig.Port),
 		User:           config.Get().MysqlConfig.User,
 		Pass:           config.Get().MysqlConfig.Password,
 		DB:             config.Get().MysqlConfig.Database,

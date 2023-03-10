@@ -1,5 +1,6 @@
 *.vec
 *.fvecs
+*.redis
 .idea/
 .DS_Store
 application.yaml
