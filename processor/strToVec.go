@@ -112,7 +112,7 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 			EndStruct(res)
 		if len(errs) > 0 {
 			fmt.Printf("str2vec errs: %v, body: %v\n", errs, string(body))
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 		// 如果上游服务器显存有压力，会返回 419 状态码

@@ -64,8 +64,8 @@ func main() {
 	for i, p := range processors {
 		fmt.Printf("flows %d: in:%v, out:%v\n", i, flows[i].In(), flows[i].Out())
 		p := p
-		// 把专利分批，统一请求向量化服务（每批500个，目前向量化接口一批最多能容纳510个）
-		batchFlow := streamUtil.NewBatch[*model.Patent](500, 1*time.Second)
+		// 把专利分批，统一请求向量化服务（每批70个）
+		batchFlow := streamUtil.NewBatch[*model.Patent](70, 1*time.Second)
 		// 获取转成向量后的flow
 		// 最终的结果是，每个元素都是vectorPatentAndVectorID，即 包含专利、向量、向量id的结构体
 		vectorAndPatentFlow := flows[i].
@@ -184,22 +184,6 @@ func extractVector() streams.Flow {
 
 	// 这里写文件要保证向量的顺序，所以并发为1
 	return flow.NewMap[*streamUtil.VectorPatentAndVectorID, string](f, 1)
-}
-
-//// 保存向量成文件
-//func saveVector(p processor.Processor) streams.Flow {
-//	f := func(m *VectorPatentAndVectorID) {
-//
-//	}
-//}
-
-// mock 一下保存向量id和专利id的流程
-func mockSaveVecIDAndPatentID() streams.Flow {
-	f := func(m *streamUtil.VectorPatentAndVectorID) string {
-		return fmt.Sprintf("专利<%s>对应的向量id是<%v>\n", m.Name, m.VectorID)
-	}
-
-	return flow.NewMap[*streamUtil.VectorPatentAndVectorID, string](f, 10)
 }
 
 // IDGenerator 从0开始生成ID，不断累加
