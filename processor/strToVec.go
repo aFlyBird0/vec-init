@@ -119,20 +119,20 @@ func (p strToVec) ToVecs(patents []*model.Patent) []*vector.Vector {
 		if resp == nil || resp.StatusCode != http.StatusOK {
 			fmt.Printf("str2vec status code != 200, status code: %v, body: %v\n", resp.StatusCode, string(body))
 			if resp.StatusCode == 419 {
-				time.Sleep(30 * time.Second)
+				time.Sleep(5 * time.Second)
 			}
 			continue
 		}
 		if len(res.Data) != len(patents) {
 			fmt.Printf("str2vec response data length != patents length, data length: %v, patents length: %v\n", len(res.Data), len(patents))
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 
 		for _, v := range res.Data {
 			if len(v) < 1 {
 				fmt.Printf("str2vec vector dimension < 1, vectors: %v\n", res.Data)
-				time.Sleep(30 * time.Second)
+				time.Sleep(5 * time.Second)
 				continue
 			}
 		}
